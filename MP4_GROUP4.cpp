@@ -91,6 +91,7 @@ void gameplay(int id, latch& login, barrier<function<void()>>& finishRound, bool
 
 }
 
+
 void start(int numPlayers, bool isAuto){
     latch login(numPlayers);
     barrier<function<void()>> finishRound(numPlayers, [](){
@@ -103,7 +104,7 @@ void start(int numPlayers, bool isAuto){
     for(int i = 0; i < numPlayers; ++i) 
     players.emplace_back([=, &login, &finishRound]() {
         gameplay(i + 1, login, finishRound, isAuto);
-    }); //start threads
+    }); //start thread
     
     this_thread::sleep_for(chrono::seconds(1)); //temporary latch
     
