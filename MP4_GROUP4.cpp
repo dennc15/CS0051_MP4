@@ -10,7 +10,8 @@
 
 using namespace std;
 
-mutex printMtx;
+recursive_mutex printMtx;
+int roundNo = 1;
 
 struct Question{
     string q;
@@ -18,7 +19,17 @@ struct Question{
     vector<string> ch;
 };
 
-void gameplay(int id, latch& login, bool isAuto){
+vector<Question> questions = {
+    {"What is 2 + 2?", 'a', {"a) 4", "b) 3", "c) 5", "d) 22"}},
+    {"Capital of France?", 'b', {"a) Rome", "b) Paris", "c) London", "d) Berlin"}},
+    {"Which planet is known as the Red Planet?", 'c', {"a) Venus", "b) Jupiter", "c) Mars", "d) Mercury"}},
+    {"What is the boiling point of water at sea level?", 'd', {"a) 50°C", "b) 90°C", "c) 110°C", "d) 100°C"}},
+    {"Who wrote 'Romeo and Juliet'?", 'a', {"a) William Shakespeare", "b) Charles Dickens", "c) Jane Austen", "d) Mark Twain"}}
+};
+
+void gameplay(int id, latch& login, barrier& finishRound, bool isAuto){
+    int ch;
+    
     {
         lock_guard<mutex> lock(printMtx);
         cout<<"Player "<< id<<" Logging in.."<<endl;
@@ -26,26 +37,47 @@ void gameplay(int id, latch& login, bool isAuto){
     //login use countdown and print when player has logged in
     this_thread::sleep_for(chrono::seconds(1)); //temporary latch
     //"All players logged in!"
-    
+    for (int i = roundNo; i <= 3; ++i){
+        {
+            lock_guard<recursive_mutex> printMtx;
+            ch = askQ();
+            cout<<"Player "<<id<<" has chosen "<<ch<<"!"<<endl;
+        }
+        finishRound.arrive_and_wait();
+        
+    }
 
 }
 
 void start(int numPlayers, bool isAuto){
     latch login(numPlayers);
+    barrier finishRound(numPlayers, [](){
+       cout<<"[ROUND "<<roundNo<<" FINISHED]"<<endl;;
+       cout<<"Checking scores..."<<endl;
+    });
+
 
     vector<thread> players;
-    for(int i = 0; i < 4; ++i) players.emplace_back(gameplay, i+1, ref(login), isAuto); //start threads
+    for(int i = 0; i < numPlayers; ++i) players.emplace_back(gameplay, i+1, ref(login), ref(finishRound), isAuto); //start threads
     this_thread::sleep_for(chrono::seconds(1)); //temporary latch
     
     cout<<"All players logged in!";
+    
 
 
     for (auto& t : players) t.join(); //join threads
 }
 
 
-void askQ(){ //asks questions and calls lifeline
-
+char askQ(){ //asks questions and calls lifeline
+    int ch;
+    Question q = questions[roundNo-1];
+    cout<<q[0]<<endl;
+    for (choice : q[2])cout<<choice<<endl;
+    cout<<"Choice: ";
+    cin>>ch
+    //add lifeline here, lifeline will return the ch that this method will be returning
+    return ch;
 }
 
 char lifeline(){
