@@ -40,12 +40,16 @@ struct Question{
     vector<string> ch;
 };
 
-vector<Question> questions = { //SAMPLE QUESTIONS <------------------- TODO
-    {"What is 2 + 2?", 'a', {"a) 4", "b) 3", "c) 5", "d) 22"}},
-    {"Capital of France?", 'b', {"a) Rome", "b) Paris", "c) London", "d) Berlin"}},
-    {"Which planet is known as the Red Planet?", 'c', {"a) Venus", "b) Jupiter", "c) Mars", "d) Mercury"}},
-    {"What is the boiling point of water at sea level?", 'd', {"a) 50°C", "b) 90°C", "c) 110°C", "d) 100°C"}},
-    {"Who wrote 'Romeo and Juliet'?", 'a', {"a) William Shakespeare", "b) Charles Dickens", "c) Jane Austen", "d) Mark Twain"}}
+vector<Question> questions = { 
+    {"Which of the following would a magnet most likely attract?", 'a', {"a) Metal", "b) Plastic", "c) Wood", "d) The wrong person"}},
+    {"What is the most populated country in the world?", 'b', {"a) China", "b) India", "c) United States", "d) Russia"}},
+    {"Which insect shorted out an early supercomputer and inspired the term 'computer bug'?", 'd', {"a) Beetle", "b) Cockroach", "c) Fly", "d) Moth"}},
+    {"Who sang the song 'Billy Jean'?", 'b', {"a) Michael B. Jordan", "b) Michael Jackson", "c) Michael Jordan", "d) Michael Wazowski"}},
+    {"Who lives in a pineapple under the sea?", 'c', {"a) Patrick Star", "b) Phineas and Ferb", "c) Spongebob Squarepants", "d) Ariel"}},
+    {"Who painted the Mona Lisa?", 'd', {"a) Vincent van Gogh", "b) Pablo Picasso", "c) Claude Monet", "d) Leanardo da Vinci"}},
+    {"What is the deadliest animal in the world?", 'b', {"a) Scorpion", "b) Mosquito", "c) Crocodile", "d) Shark"}},
+    {"The Earth is approximately how many miles away from the Sun?", 'c', {"a) 9.3 million", "b) 39 million", "c) 93 million", "d) 193 million"}},
+    {"Who was the first female scientist to win a Nobel Prize?", 'b', {"a) Emily Blackwell", "b) Marie Curie", "c) Florence Nightingale", "d) Grace Hopper"}}
 };
 
 //PROTOTYPES
@@ -63,27 +67,62 @@ int main()
 {
     int ch, numPlayers;
 
+    while (true){
     cout<<"MENU"<<endl;
     cout<<"1. Automatic"<<endl; //OPTIONAL NALANG 
     cout<<"2. Manual"<<endl;
+    cout<<"3. Exit"<<endl;
 
-    //add error handling and exit <------------------- TODO
+    cout << "Enter choice: ";
     cin>>ch;
-
-    switch(ch){
-        case 2: //Manual
-            start(4, false);
-            
+    
+        switch(ch){
+            case 2: //Manual
+                start(4, false);
+                return 0; //program exits after the winner is announced 
+            case 3:
+                cout << "Exiting..." << endl;
+                return 0;
+            default:
+                if (cin.fail()){
+                    cin.clear();
+                    cin.ignore(1000, '\n');
+                    cout << "Error. Input should be a number." << endl;
+                } else {
+                    cout << "Invalid choice. Please choose from 1-3 only." << endl;
+                }
+        }
     }
 }
 
-char askQ(int id){ //<------------------- TODO asks questions and calls lifeline, add automated version too either in this function or in a diff function or sa gameplay function
-    char ch;
+char askQ(int id){ //<------------------- TODO call lifeline, add automated version too either in this function or in a diff function or sa gameplay function
     Question q = questions[roundNo-1];
-    cout<<q.q<<endl;
-    for (auto& choice : q.ch)cout<<choice<<endl;
-    cout<<"Player "<<id<<"'s choice: ";
-    cin>>ch;
+    char ch = ' ';
+    string answer;
+    
+    {
+        lock_guard<recursive_mutex> lock(printMtx);
+        cout << q.q << endl;
+        for (auto& choice : q.ch) cout << choice << endl;
+        cout << "[You have 15 seconds to answer]\n";
+        cout << "Player " << id << "'s choice (Press 0 to use lifeline): ";
+    }
+    
+    auto start = chrono::steady_clock::now(); //start timer
+    
+
+    cin >> answer; //answer will be marked wrong if entered after the time limit
+    
+    auto end = chrono::steady_clock::now();
+    auto timeElapsed = chrono::duration_cast<chrono::seconds>(end - start).count();
+    
+    if (timeElapsed > 15){
+        lock_guard<recursive_mutex> lock(printMtx);
+        cout << "\nInvalid answer. Time limit exceeded!\n";
+        return 'x'; //player's answer is automatically marked
+    }
+    
+    ch = answer[0];
     //add lifeline here, lifeline will return the ch that this method will be returning <------------------- TODO
     return ch;
 }
@@ -166,4 +205,3 @@ void start(int numPlayers, bool isAuto){
     cout<<"The Player(s) with the highest score is.. "<<checkHighest()<<"!"<<endl;
 
 }
-
