@@ -19,7 +19,7 @@ struct Question{
     vector<string> ch;
 };
 
-vector<Question> questions = {
+vector<Question> questions = { //SAMPLE QUESTIONS
     {"What is 2 + 2?", 'a', {"a) 4", "b) 3", "c) 5", "d) 22"}},
     {"Capital of France?", 'b', {"a) Rome", "b) Paris", "c) London", "d) Berlin"}},
     {"Which planet is known as the Red Planet?", 'c', {"a) Venus", "b) Jupiter", "c) Mars", "d) Mercury"}},
@@ -70,12 +70,12 @@ void start(int numPlayers, bool isAuto){
 
 
 char askQ(){ //asks questions and calls lifeline
-    int ch;
+    char ch;
     Question q = questions[roundNo-1];
-    cout<<q[0]<<endl;
-    for (choice : q[2])cout<<choice<<endl;
+    cout<<q.q<<endl;
+    for (auto& choice : q.ch)cout<<choice<<endl;
     cout<<"Choice: ";
-    cin>>ch
+    cin>>ch;
     //add lifeline here, lifeline will return the ch that this method will be returning
     return ch;
 }
