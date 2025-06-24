@@ -111,5 +111,3 @@ Player 4 answered correctly.
 | Overall Integration     | Use `mutex` to synchronize console output | Everyone    |
 
 ---
-
-Let me know if you'd like a PDF export or `.md` file version.
